@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="Froog.AuthService/Froog.AuthService.csproj" />
+  <Project Path="Froog.Gateway/Froog.Gateway.csproj" />
+  <Project Path="Froog.SandboxService/Froog.SandboxService.csproj" />
+</Solution>
