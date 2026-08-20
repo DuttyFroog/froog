@@ -2,26 +2,26 @@
   <div class="nav-content">
     <ul>
       <li>
-        <a class="nav-link nav-link-selected" (click)="selectSession('Home')">
+        <a class="nav-link nav-link-selected nav-link-home" (click)="selectSession('Home')">
           {{ selectedSession === 'Home' ? 'Froog.' : 'Back.' }}
         </a>
       </li>
       <li (click)="selectSession('Career')">
         <a class="nav-link nav-link-desktop" [class.nav-link-selected]="isSelected('Career')">Career</a>
         <a class="nav-link nav-link-mobile" [class.nav-link-selected]="isSelected('Career')">
-          <span class="material-symbols-outlined">work</span>
+          <span class="icon material-symbols-outlined">work</span>
         </a>
       </li>
       <li (click)="selectSession('Playground')">
         <a class="nav-link nav-link-desktop" [class.nav-link-selected]="isSelected('Playground')">Playground</a>
         <a class="nav-link nav-link-mobile" [class.nav-link-selected]="isSelected('Playground')">
-          <span class="material-symbols-outlined">playground_2</span>
+          <span class="icon material-symbols-outlined">playground_2</span>
         </a>
       </li>
       <li (click)="selectSession('Museum')">
         <a class="nav-link nav-link-desktop" [class.nav-link-selected]="isSelected('Museum')">Museum</a>
         <a class="nav-link nav-link-mobile" [class.nav-link-selected]="isSelected('Museum')">
-          <span class="material-symbols-outlined">wall_art</span>
+          <span class="icon material-symbols-outlined">wall_art</span>
         </a>
       </li>
     </ul>

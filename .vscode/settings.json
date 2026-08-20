@@ -1,0 +1,8 @@
+{
+    "chat.tools.terminal.autoApprove": {
+        "/^ng build shell$/": {
+            "approve": true,
+            "matchCommandLine": true
+        }
+    }
+}
