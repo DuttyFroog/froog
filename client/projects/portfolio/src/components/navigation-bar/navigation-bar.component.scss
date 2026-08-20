@@ -1,0 +1,56 @@
+.nav-container {
+    @apply max-w-md 
+    w-[calc(100%-2rem)]
+    md:w-full
+    mx-auto
+    bg-white
+    rounded-full
+    shadow-lg
+    h-12
+    flex
+    items-center
+    justify-between
+    fixed
+    left-1/2 -translate-x-1/2
+    top-3
+    z-50;
+}
+
+.nav-content {
+    @apply flex flex-1 items-center;
+}
+
+.nav-content ul {
+    @apply m-0 w-full list-none flex flex-nowrap;
+    justify-content: flex-start;
+}
+
+@media (min-width: 768px) {
+    .nav-content ul {
+        justify-content: space-between;
+    }
+}
+
+.nav-link {
+    @apply flex items-center px-4 py-2 font-bold text-gray-400 hover:text-black;
+    font-family: 'Signika', sans-serif;
+    font-size: 1.2rem;
+}
+
+.nav-link-selected {
+    @apply text-black;
+}
+
+.nav-link-desktop {
+    @apply hidden md:flex;
+}
+
+.nav-link-mobile {
+    @apply flex md:hidden;
+}
+
+.nav-mobile-locator {
+    @apply px-4 py-2 font-bold text-black md:hidden;
+    font-family: 'Signika', sans-serif;
+    font-size: 1.2rem;
+}
