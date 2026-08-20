@@ -17,17 +17,22 @@
 }
 
 .nav-content {
-    @apply flex flex-1 items-center;
+    @apply flex min-w-0 flex-1 items-center;
 }
 
 .nav-content ul {
-    @apply m-0 w-full list-none flex flex-nowrap;
+    @apply m-0 min-w-0 w-full list-none flex flex-nowrap;
     justify-content: flex-start;
 }
 
 @media (min-width: 768px) {
     .nav-content ul {
-        justify-content: space-between;
+        justify-content: center;
+        gap: 5px; /* distance between all nav links on desktop */
+    }
+
+    .nav-link-desktop {
+        @apply px-2;
     }
 }
 
@@ -41,6 +46,11 @@
     @apply text-black;
 }
 
+.nav-link-home {
+    justify-content: center;
+    width: 6.5rem;
+}
+
 .nav-link-desktop {
     @apply hidden md:flex;
 }
@@ -50,7 +60,17 @@
 }
 
 .nav-mobile-locator {
-    @apply px-4 py-2 font-bold text-black md:hidden;
+    @apply flex-shrink-0 px-2 py-2 font-bold text-black md:hidden;
     font-family: 'Signika', sans-serif;
     font-size: 1.2rem;
+}
+
+@media (max-width: 767px) {
+    .nav-link {
+        @apply px-2;
+    }
+
+    .nav-link-home {
+        width: 5.5rem;
+    }
 }

@@ -1,0 +1,96 @@
+.map-sign {
+    --sign-size: 55px;
+    --menu-step: 70px;
+    @apply fixed bottom-4 right-5 z-40;
+    width: var(--sign-size);
+    height: var(--sign-size);
+}
+
+.map-sign::before {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 85px;
+    height: 265px;
+    pointer-events: none;
+}
+
+.sign {
+    @apply absolute inset-0;
+    width: var(--sign-size);
+    height: var(--sign-size);
+    border-radius: 50%;
+}
+
+.sign-base {
+    @apply z-40 bg-blue-500;
+}
+
+.sign-cover {
+    @apply z-50 border-0 bg-green-500 p-0 cursor-pointer;
+    transition: transform 0.5s ease;
+}
+
+.sign-cover:focus-visible {
+    @apply outline-none ring-2 ring-green-700 ring-offset-2;
+}
+
+.sign-menu {
+    @apply absolute bottom-0 right-0 z-40 m-0 list-none p-0;
+    width: var(--sign-size);
+    height: var(--sign-size);
+}
+
+.sign-menu-item {
+    @apply absolute bottom-0 right-0 bg-white text-gray-600 border-gray-400 border-2 flex items-center justify-center;
+    --menu-index: 1;
+    font-family: var(--font-signika);
+    font-decoration: bold;
+    width: var(--sign-size);
+    height: var(--sign-size);
+    border-radius: 50%;
+    transform: translateY(0);
+    transition: transform 0.5s ease;
+    transition-delay: calc(var(--menu-index) * 50ms);
+    pointer-events: auto;
+}
+
+.sign-menu-item:nth-child(1) {
+    --menu-index: 1;
+}
+
+
+.sign-menu-item:nth-child(2) {
+    --menu-index: 2;
+}
+
+.sign-menu-item:nth-child(3) {
+    --menu-index: 3;
+}
+
+.sign-cover.active {
+    transform: translate(-30px, -20px);
+}
+
+.sign-menu.active .sign-menu-item {
+    transform: translateY(calc(var(--menu-step) * var(--menu-index) * -1));
+}
+
+@media (min-width: 768px) and (hover: hover) {
+    .map-sign::before {
+        pointer-events: auto;
+    }
+
+    .map-sign:hover .sign-cover {
+        transform: translate(-30px, -20px);
+    }
+
+    .map-sign:hover .sign-menu-item {
+        transform: translateY(calc(var(--menu-step) * var(--menu-index) * -1));
+    }
+
+    .map-sign:hover .sign-menu-item:hover {
+        transform: translateY(calc(var(--menu-step) * var(--menu-index) * -1)) scale(1.15);
+    }
+}
