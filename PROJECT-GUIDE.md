@@ -278,7 +278,144 @@ show both `Hello, shell` and `Hello, portfolio`.
 
 ---
 
-## 5. Request flow, end to end
+## 5. Deployment
+
+One domain, one VPS, five containers. `web` is nginx: it terminates TLS, serves all four
+Angular apps, and proxies `/api` to the gateway. Nothing else publishes a port.
+
+```mermaid
+flowchart LR
+  I[":80 / :443"] --> W[web · nginx]
+  W -->|/| SH[shell dist]
+  W -->|/mfe/*| R[3 remote dists]
+  W -->|/api/*| G[gateway :8080]
+  G --> A[auth :8080]
+  G --> S[sandbox :8080]
+  C[certbot] -. shared volumes .- W
+```
+
+### 5.1 Path layout
+
+| URL | Serves |
+| --- | --- |
+| `/` | shell `dist`, with SPA fallback to `index.html` |
+| `/mfe/portfolio/` | portfolio `dist` |
+| `/mfe/sandbox/` | sandbox `dist` |
+| `/mfe/share-files/` | share-files `dist` |
+| `/api/*` | gateway, with `/api` stripped |
+
+Remote *assets* live under `/mfe/` so they cannot collide with the shell's *routes*
+(`/sandbox`, `/files`). Each remote is built with a matching `baseHref`; the shell keeps
+`/` because Native Federation resolves the host's own `remoteEntry.json` and shared
+bundles against the document base href.
+
+Because everything is one origin, `projects/shell/federation.manifest.prod.json` uses
+root-absolute URLs — no hostname is baked into any image, so the same `froog-web` image
+runs in any environment. The client Dockerfile copies it over the development manifest.
+
+### 5.2 Images
+
+Four images, all built by `.github/workflows/docker-publish.yml` on push to `main` and
+published to GHCR. The VPS only pulls.
+
+| Image | Context | Dockerfile |
+| --- | --- | --- |
+| `froog-web` | `client/` | `client/Dockerfile` |
+| `froog-gateway` | `backend/` | `backend/Froog.Gateway/Dockerfile` |
+| `froog-auth` | `backend/` | `backend/Froog.AuthService/Dockerfile` |
+| `froog-sandbox` | `backend/` | `backend/Froog.SandboxService/Dockerfile` |
+
+The backend build context is `backend/`, not the individual project folder, because
+`NuGet.config` sits at the backend root and restore needs it.
+
+`docker-compose.yml` overrides the gateway's cluster addresses with environment
+variables rather than editing `appsettings.json`, so the `localhost:5103` / `localhost:5041`
+values keep working for local development.
+
+### 5.3 First deploy
+
+Prerequisites: `duttyfroog.com` and `www.duttyfroog.com` A records pointing at the VPS,
+ports 80 and 443 open.
+
+```bash
+cp .env.example .env && $EDITOR .env
+docker compose pull
+docker compose up -d
+```
+
+nginx boots on a throwaway self-signed certificate — it will not start without a
+certificate file, and certbot cannot pass its HTTP-01 challenge until nginx is serving.
+That placeholder occupies the path certbot wants, so clear it before requesting the real
+one:
+
+```bash
+docker compose run --rm --entrypoint sh certbot -c \
+  'rm -rf /etc/letsencrypt/live/duttyfroog.com \
+          /etc/letsencrypt/archive/duttyfroog.com \
+          /etc/letsencrypt/renewal/duttyfroog.com.conf'
+
+docker compose run --rm certbot certonly --webroot -w /var/www/certbot \
+  -d duttyfroog.com -d www.duttyfroog.com \
+  --email you@duttyfroog.com --agree-tos --no-eff-email
+
+docker compose exec web nginx -s reload
+```
+
+### 5.4 Redeploy and renewal
+
+```bash
+docker compose pull && docker compose up -d
+```
+
+The `certbot` container renews on a 12-hour loop, but nginx only picks up a rotated
+certificate on reload. Add a weekly cron entry:
+
+```
+0 4 * * 1 cd /srv/froog && docker compose exec -T web nginx -s reload
+```
+
+### 5.5 Smoke tests
+
+```bash
+curl https://duttyfroog.com/api/health                          # Gateway OK
+curl https://duttyfroog.com/api/auth/                           # Hello World!
+curl https://duttyfroog.com/api/sandbox/                        # Hello World!
+curl -I https://duttyfroog.com/mfe/portfolio/remoteEntry.json   # 200, Cache-Control: no-cache
+curl -o /dev/null -w '%{http_code}\n' https://duttyfroog.com/mfe/nope.js   # 404, not HTML
+docker compose ps                                               # only `web` lists ports
+```
+
+That last `/mfe/` check matters: if a missing chunk fell through to the SPA and returned
+`index.html`, the browser would report an opaque module parse error instead of a 404.
+
+### 5.6 Testing the images locally
+
+`docker-compose.dev.yml` builds from source instead of pulling and binds unprivileged
+ports, so you can exercise the packaged app before anything reaches CI:
+
+```powershell
+docker compose -f docker-compose.yml -f docker-compose.dev.yml --env-file .env.example up --build
+```
+
+Browse **https://localhost:8443** — note the scheme. `DOMAIN=localhost` makes the
+entrypoint mint a self-signed certificate, so the browser warns once.
+
+This is the only place the production wiring is exercised: the `/mfe/*` manifest, the
+`baseHref` values, and the nginx routing are all bypassed by `ng serve`. It is not a
+development loop, though — there is no hot reload, and every change means rebuilding all
+four Angular apps. Use section 4 for feature work.
+
+When something misbehaves, the two files worth inspecting inside the container:
+
+```powershell
+docker compose -f docker-compose.yml -f docker-compose.dev.yml exec web sh
+# cat /etc/nginx/conf.d/default.conf   -> confirms ${DOMAIN} was substituted
+# ls /usr/share/nginx/html/mfe/portfolio/ -> confirms the COPY paths landed
+```
+
+---
+
+## 6. Request flow, end to end
 
 1. Browser loads `localhost:4200` → shell `main.ts` → `initFederation('/assets/federation.manifest.json')` installs the import map → `bootstrap.ts` → Angular starts.
 2. Router hits `''` → `loadRemoteModule('portfolio', './Routes')` resolves through the import
@@ -292,7 +429,7 @@ show both `Hello, shell` and `Hello, portfolio`.
 
 ---
 
-## 6. Troubleshooting
+## 7. Troubleshooting
 
 | Symptom | Cause | Fix |
 | --- | --- | --- |
@@ -311,12 +448,16 @@ show both `Hello, shell` and `Hello, portfolio`.
 
 ---
 
-## 7. Known gaps / next steps
+## 8. Known gaps / next steps
 
 - Auth and Sandbox services are placeholders returning `"Hello World!"`.
 - Remote apps route to their scaffolded `AppComponent`; replace with real features.
-- `federation.manifest.json` still points at `localhost`. Swap the file per environment (or
-  serve it from the gateway) to point the shell at deployed remotes.
+- Nothing in the client calls the API yet. When that lands, base the calls on `/api` —
+  same origin, no CORS, no environment-specific host. At that point the unconditional
+  `WithOrigins("http://localhost:4200", ...)` block in `Froog.Gateway/Program.cs` should
+  become development-only.
+- Deployment is manual (`docker compose pull && up -d`). Automating it from CI needs an
+  SSH deploy key stored as a repository secret.
 - No authentication is enforced at the gateway yet — that is the natural place for JWT
   validation.
 - `npm audit` reports vulnerabilities inherent to the Angular 17 toolchain; clearing them

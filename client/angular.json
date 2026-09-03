@@ -170,6 +170,7 @@
 					},
 					"configurations": {
 						"production": {
+							"baseHref": "/mfe/portfolio/",
 							"budgets": [
 								{
 									"type": "initial",
@@ -273,6 +274,7 @@
 					},
 					"configurations": {
 						"production": {
+							"baseHref": "/mfe/sandbox/",
 							"budgets": [
 								{
 									"type": "initial",
@@ -376,6 +378,7 @@
 					},
 					"configurations": {
 						"production": {
+							"baseHref": "/mfe/share-files/",
 							"budgets": [
 								{
 									"type": "initial",

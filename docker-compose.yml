@@ -1,0 +1,56 @@
+name: froog
+
+services:
+  web:
+    image: ${REGISTRY}/froog-web:${IMAGE_TAG:-latest}
+    restart: unless-stopped
+    environment:
+      DOMAIN: ${DOMAIN}
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - certbot-certs:/etc/letsencrypt
+      - certbot-www:/var/www/certbot
+    depends_on:
+      - gateway
+
+  certbot:
+    image: certbot/certbot:latest
+    restart: unless-stopped
+    volumes:
+      - certbot-certs:/etc/letsencrypt
+      - certbot-www:/var/www/certbot
+    entrypoint: >
+      /bin/sh -c 'trap exit TERM;
+      while :; do certbot renew --webroot -w /var/www/certbot --quiet;
+      sleep 12h & wait $${!}; done'
+
+  # Cluster addresses are overridden here rather than in appsettings.json so the
+  # localhost ports keep working for local development.
+  gateway:
+    image: ${REGISTRY}/froog-gateway:${IMAGE_TAG:-latest}
+    restart: unless-stopped
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ReverseProxy__Clusters__auth-cluster__Destinations__auth__Address: http://auth:8080/
+      ReverseProxy__Clusters__sandbox-cluster__Destinations__sandbox__Address: http://sandbox:8080/
+    depends_on:
+      - auth
+      - sandbox
+
+  auth:
+    image: ${REGISTRY}/froog-auth:${IMAGE_TAG:-latest}
+    restart: unless-stopped
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+
+  sandbox:
+    image: ${REGISTRY}/froog-sandbox:${IMAGE_TAG:-latest}
+    restart: unless-stopped
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+
+volumes:
+  certbot-certs:
+  certbot-www:
