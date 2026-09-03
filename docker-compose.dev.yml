@@ -1,0 +1,36 @@
+# Local testing of the production images: build from source instead of pulling,
+# and bind unprivileged ports so nothing collides with a host web server.
+# DOMAIN=localhost makes the entrypoint mint a self-signed cert, so browse https://localhost:8443
+# and accept the warning.
+#
+#   docker compose -f docker-compose.yml -f docker-compose.dev.yml --env-file .env.example up --build
+
+services:
+  web:
+    build:
+      context: ./client
+    image: froog-web:dev
+    environment:
+      DOMAIN: localhost
+    # Replaces rather than appends; a merged list would still try to bind 80 and 443.
+    ports: !override
+      - "8080:80"
+      - "8443:443"
+
+  gateway:
+    build:
+      context: ./backend
+      dockerfile: Froog.Gateway/Dockerfile
+    image: froog-gateway:dev
+
+  auth:
+    build:
+      context: ./backend
+      dockerfile: Froog.AuthService/Dockerfile
+    image: froog-auth:dev
+
+  sandbox:
+    build:
+      context: ./backend
+      dockerfile: Froog.SandboxService/Dockerfile
+    image: froog-sandbox:dev

@@ -16,12 +16,42 @@
 			"prefix": "froog",
 			"architect": {
 				"build": {
-					"builder": "ngx-build-plus:browser",
+					"builder": "@angular-architects/native-federation:build",
+					"options": {},
+					"configurations": {
+						"production": {
+							"target": "shell:esbuild:production"
+						},
+						"development": {
+							"target": "shell:esbuild:development",
+							"dev": true
+						}
+					},
+					"defaultConfiguration": "production"
+				},
+				"serve": {
+					"builder": "@angular-architects/native-federation:build",
+					"options": {
+						"target": "shell:serve-original:development",
+						"rebuildDelay": 0,
+						"dev": true,
+						"port": 0
+					}
+				},
+				"extract-i18n": {
+					"builder": "@angular-devkit/build-angular:extract-i18n",
+					"options": {
+						"buildTarget": "shell:build"
+					}
+				},
+				"esbuild": {
+					"builder": "@angular-devkit/build-angular:application",
 					"options": {
 						"outputPath": "dist/shell",
 						"index": "projects/shell/src/index.html",
 						"polyfills": [
-							"zone.js"
+							"zone.js",
+							"es-module-shims"
 						],
 						"tsConfig": "projects/shell/tsconfig.app.json",
 						"inlineStyleLanguage": "scss",
@@ -33,9 +63,7 @@
 							"projects/shell/src/styles.scss"
 						],
 						"scripts": [],
-						"main": "projects/shell/src/main.ts",
-						"extraWebpackConfig": "projects/shell/webpack.config.js",
-						"commonChunk": false
+						"browser": "projects/shell/src/main.ts"
 					},
 					"configurations": {
 						"production": {
@@ -43,7 +71,7 @@
 								{
 									"type": "initial",
 									"maximumWarning": "500kb",
-									"maximumError": "1mb"
+									"maximumError": "2mb"
 								},
 								{
 									"type": "anyComponentStyle",
@@ -51,8 +79,7 @@
 									"maximumError": "4kb"
 								}
 							],
-							"outputHashing": "all",
-							"extraWebpackConfig": "projects/shell/webpack.prod.config.js"
+							"outputHashing": "all"
 						},
 						"development": {
 							"optimization": false,
@@ -62,31 +89,21 @@
 					},
 					"defaultConfiguration": "production"
 				},
-				"serve": {
-					"builder": "ngx-build-plus:dev-server",
+				"serve-original": {
+					"builder": "@angular-devkit/build-angular:dev-server",
 					"configurations": {
 						"production": {
-							"buildTarget": "shell:build:production",
-							"extraWebpackConfig": "projects/shell/webpack.prod.config.js"
+							"buildTarget": "shell:esbuild:production"
 						},
 						"development": {
-							"buildTarget": "shell:build:development"
+							"buildTarget": "shell:esbuild:development"
 						}
 					},
 					"defaultConfiguration": "development",
 					"options": {
-						"port": 4200,
-						"publicHost": "http://localhost:4200",
-						"extraWebpackConfig": "projects/shell/webpack.config.js"
+						"port": 4200
 					}
-				},
-				"extract-i18n": {
-					"builder": "ngx-build-plus:extract-i18n",
-					"options": {
-						"buildTarget": "shell:build",
-						"extraWebpackConfig": "projects/shell/webpack.config.js"
-					}
-				},
+				}
 			}
 		},
 		"portfolio": {
@@ -102,12 +119,42 @@
 			"prefix": "froog-portfolio",
 			"architect": {
 				"build": {
-					"builder": "ngx-build-plus:browser",
+					"builder": "@angular-architects/native-federation:build",
+					"options": {},
+					"configurations": {
+						"production": {
+							"target": "portfolio:esbuild:production"
+						},
+						"development": {
+							"target": "portfolio:esbuild:development",
+							"dev": true
+						}
+					},
+					"defaultConfiguration": "production"
+				},
+				"serve": {
+					"builder": "@angular-architects/native-federation:build",
+					"options": {
+						"target": "portfolio:serve-original:development",
+						"rebuildDelay": 0,
+						"dev": true,
+						"port": 0
+					}
+				},
+				"extract-i18n": {
+					"builder": "@angular-devkit/build-angular:extract-i18n",
+					"options": {
+						"buildTarget": "portfolio:build"
+					}
+				},
+				"esbuild": {
+					"builder": "@angular-devkit/build-angular:application",
 					"options": {
 						"outputPath": "dist/portfolio",
 						"index": "projects/portfolio/src/index.html",
 						"polyfills": [
-							"zone.js"
+							"zone.js",
+							"es-module-shims"
 						],
 						"tsConfig": "projects/portfolio/tsconfig.app.json",
 						"inlineStyleLanguage": "scss",
@@ -119,17 +166,16 @@
 							"projects/portfolio/src/styles.scss"
 						],
 						"scripts": [],
-						"main": "projects/portfolio/src/main.ts",
-						"extraWebpackConfig": "projects/portfolio/webpack.config.js",
-						"commonChunk": false
+						"browser": "projects/portfolio/src/main.ts"
 					},
 					"configurations": {
 						"production": {
+							"baseHref": "/mfe/portfolio/",
 							"budgets": [
 								{
 									"type": "initial",
 									"maximumWarning": "500kb",
-									"maximumError": "1mb"
+									"maximumError": "2mb"
 								},
 								{
 									"type": "anyComponentStyle",
@@ -137,8 +183,7 @@
 									"maximumError": "4kb"
 								}
 							],
-							"outputHashing": "all",
-							"extraWebpackConfig": "projects/portfolio/webpack.prod.config.js"
+							"outputHashing": "all"
 						},
 						"development": {
 							"optimization": false,
@@ -148,31 +193,21 @@
 					},
 					"defaultConfiguration": "production"
 				},
-				"serve": {
-					"builder": "ngx-build-plus:dev-server",
+				"serve-original": {
+					"builder": "@angular-devkit/build-angular:dev-server",
 					"configurations": {
 						"production": {
-							"buildTarget": "portfolio:build:production",
-							"extraWebpackConfig": "projects/portfolio/webpack.prod.config.js"
+							"buildTarget": "portfolio:esbuild:production"
 						},
 						"development": {
-							"buildTarget": "portfolio:build:development"
+							"buildTarget": "portfolio:esbuild:development"
 						}
 					},
 					"defaultConfiguration": "development",
 					"options": {
-						"port": 4201,
-						"publicHost": "http://localhost:4201",
-						"extraWebpackConfig": "projects/portfolio/webpack.config.js"
+						"port": 4201
 					}
-				},
-				"extract-i18n": {
-					"builder": "ngx-build-plus:extract-i18n",
-					"options": {
-						"buildTarget": "portfolio:build",
-						"extraWebpackConfig": "projects/portfolio/webpack.config.js"
-					}
-				},
+				}
 			}
 		},
 		"sandbox": {
@@ -188,12 +223,42 @@
 			"prefix": "froog",
 			"architect": {
 				"build": {
-					"builder": "ngx-build-plus:browser",
+					"builder": "@angular-architects/native-federation:build",
+					"options": {},
+					"configurations": {
+						"production": {
+							"target": "sandbox:esbuild:production"
+						},
+						"development": {
+							"target": "sandbox:esbuild:development",
+							"dev": true
+						}
+					},
+					"defaultConfiguration": "production"
+				},
+				"serve": {
+					"builder": "@angular-architects/native-federation:build",
+					"options": {
+						"target": "sandbox:serve-original:development",
+						"rebuildDelay": 0,
+						"dev": true,
+						"port": 0
+					}
+				},
+				"extract-i18n": {
+					"builder": "@angular-devkit/build-angular:extract-i18n",
+					"options": {
+						"buildTarget": "sandbox:build"
+					}
+				},
+				"esbuild": {
+					"builder": "@angular-devkit/build-angular:application",
 					"options": {
 						"outputPath": "dist/sandbox",
 						"index": "projects/sandbox/src/index.html",
 						"polyfills": [
-							"zone.js"
+							"zone.js",
+							"es-module-shims"
 						],
 						"tsConfig": "projects/sandbox/tsconfig.app.json",
 						"inlineStyleLanguage": "scss",
@@ -205,17 +270,16 @@
 							"projects/sandbox/src/styles.scss"
 						],
 						"scripts": [],
-						"main": "projects/sandbox/src/main.ts",
-						"extraWebpackConfig": "projects/sandbox/webpack.config.js",
-						"commonChunk": false
+						"browser": "projects/sandbox/src/main.ts"
 					},
 					"configurations": {
 						"production": {
+							"baseHref": "/mfe/sandbox/",
 							"budgets": [
 								{
 									"type": "initial",
 									"maximumWarning": "500kb",
-									"maximumError": "1mb"
+									"maximumError": "2mb"
 								},
 								{
 									"type": "anyComponentStyle",
@@ -223,8 +287,7 @@
 									"maximumError": "4kb"
 								}
 							],
-							"outputHashing": "all",
-							"extraWebpackConfig": "projects/sandbox/webpack.prod.config.js"
+							"outputHashing": "all"
 						},
 						"development": {
 							"optimization": false,
@@ -234,31 +297,21 @@
 					},
 					"defaultConfiguration": "production"
 				},
-				"serve": {
-					"builder": "ngx-build-plus:dev-server",
+				"serve-original": {
+					"builder": "@angular-devkit/build-angular:dev-server",
 					"configurations": {
 						"production": {
-							"buildTarget": "sandbox:build:production",
-							"extraWebpackConfig": "projects/sandbox/webpack.prod.config.js"
+							"buildTarget": "sandbox:esbuild:production"
 						},
 						"development": {
-							"buildTarget": "sandbox:build:development"
+							"buildTarget": "sandbox:esbuild:development"
 						}
 					},
 					"defaultConfiguration": "development",
 					"options": {
-						"port": 4202,
-						"publicHost": "http://localhost:4202",
-						"extraWebpackConfig": "projects/sandbox/webpack.config.js"
+						"port": 4202
 					}
-				},
-				"extract-i18n": {
-					"builder": "ngx-build-plus:extract-i18n",
-					"options": {
-						"buildTarget": "sandbox:build",
-						"extraWebpackConfig": "projects/sandbox/webpack.config.js"
-					}
-				},
+				}
 			}
 		},
 		"share-files": {
@@ -274,12 +327,42 @@
 			"prefix": "froog",
 			"architect": {
 				"build": {
-					"builder": "ngx-build-plus:browser",
+					"builder": "@angular-architects/native-federation:build",
+					"options": {},
+					"configurations": {
+						"production": {
+							"target": "share-files:esbuild:production"
+						},
+						"development": {
+							"target": "share-files:esbuild:development",
+							"dev": true
+						}
+					},
+					"defaultConfiguration": "production"
+				},
+				"serve": {
+					"builder": "@angular-architects/native-federation:build",
+					"options": {
+						"target": "share-files:serve-original:development",
+						"rebuildDelay": 0,
+						"dev": true,
+						"port": 0
+					}
+				},
+				"extract-i18n": {
+					"builder": "@angular-devkit/build-angular:extract-i18n",
+					"options": {
+						"buildTarget": "share-files:build"
+					}
+				},
+				"esbuild": {
+					"builder": "@angular-devkit/build-angular:application",
 					"options": {
 						"outputPath": "dist/share-files",
 						"index": "projects/share-files/src/index.html",
 						"polyfills": [
-							"zone.js"
+							"zone.js",
+							"es-module-shims"
 						],
 						"tsConfig": "projects/share-files/tsconfig.app.json",
 						"inlineStyleLanguage": "scss",
@@ -291,17 +374,16 @@
 							"projects/share-files/src/styles.scss"
 						],
 						"scripts": [],
-						"main": "projects/share-files/src/main.ts",
-						"extraWebpackConfig": "projects/share-files/webpack.config.js",
-						"commonChunk": false
+						"browser": "projects/share-files/src/main.ts"
 					},
 					"configurations": {
 						"production": {
+							"baseHref": "/mfe/share-files/",
 							"budgets": [
 								{
 									"type": "initial",
 									"maximumWarning": "500kb",
-									"maximumError": "1mb"
+									"maximumError": "2mb"
 								},
 								{
 									"type": "anyComponentStyle",
@@ -309,8 +391,7 @@
 									"maximumError": "4kb"
 								}
 							],
-							"outputHashing": "all",
-							"extraWebpackConfig": "projects/share-files/webpack.prod.config.js"
+							"outputHashing": "all"
 						},
 						"development": {
 							"optimization": false,
@@ -320,31 +401,21 @@
 					},
 					"defaultConfiguration": "production"
 				},
-				"serve": {
-					"builder": "ngx-build-plus:dev-server",
+				"serve-original": {
+					"builder": "@angular-devkit/build-angular:dev-server",
 					"configurations": {
 						"production": {
-							"buildTarget": "share-files:build:production",
-							"extraWebpackConfig": "projects/share-files/webpack.prod.config.js"
+							"buildTarget": "share-files:esbuild:production"
 						},
 						"development": {
-							"buildTarget": "share-files:build:development"
+							"buildTarget": "share-files:esbuild:development"
 						}
 					},
 					"defaultConfiguration": "development",
 					"options": {
-						"port": 4203,
-						"publicHost": "http://localhost:4203",
-						"extraWebpackConfig": "projects/share-files/webpack.config.js"
+						"port": 4203
 					}
-				},
-				"extract-i18n": {
-					"builder": "ngx-build-plus:extract-i18n",
-					"options": {
-						"buildTarget": "share-files:build",
-						"extraWebpackConfig": "projects/share-files/webpack.config.js"
-					}
-				},
+				}
 			}
 		}
 	}
