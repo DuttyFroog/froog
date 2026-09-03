@@ -69,12 +69,47 @@
     --menu-index: 3;
 }
 
+.login-badge {
+    @apply absolute z-10 text-red-600 bg-white rounded-full cursor-pointer;
+    bottom: -5px;
+    right: -5px;
+    font-size: 25px;
+    line-height: 1;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+}
+
+.sign-menu.active .login-badge {
+    pointer-events: auto;
+}
+
+.current-page-badge {
+    @apply absolute z-10 text-green-600 bg-white rounded-full pointer-events-none;
+    top: -5px;
+    right: -5px;
+    font-size: 20px;
+    line-height: 1;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
 .sign-cover.active {
     transform: translate(-30px, -20px);
 }
 
 .sign-menu.active .sign-menu-item {
     transform: translateY(calc(var(--menu-step) * var(--menu-index) * -1));
+}
+
+/* badge only readable/clickable once the cover slides away from the menu item */
+.sign-menu.active .login-badge {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.sign-menu.active .current-page-badge {
+    opacity: 1;
 }
 
 @media (min-width: 768px) and (hover: hover) {
@@ -88,6 +123,15 @@
 
     .map-sign:hover .sign-menu-item {
         transform: translateY(calc(var(--menu-step) * var(--menu-index) * -1));
+    }
+
+    .map-sign:hover .login-badge {
+        opacity: 1;
+        pointer-events: auto;
+    }
+
+    .map-sign:hover .current-page-badge {
+        opacity: 1;
     }
 
     .map-sign:hover .sign-menu-item:hover {

@@ -1,0 +1,21 @@
+ INFO  Building federation artefacts
+- Building...
+
+Initial chunk files   | Names         |  Raw size | Estimated transfer size
+polyfills-YJELPHIQ.js | polyfills     |  70.27 kB |                22.69 kB
+styles-FG6F647F.css   | styles        |   5.72 kB |                 1.47 kB
+chunk-DBRHBIQB.js     | -             |   3.68 kB |                 1.35 kB
+main-DS5MS5UN.js      | main          | 172 bytes |               172 bytes
+
+                      | Initial total |  79.83 kB |                25.69 kB
+
+Lazy chunk files      | Names         |  Raw size | Estimated transfer size
+chunk-2CMSDAKM.js     | bootstrap     |   9.04 kB |                 1.98 kB
+
+Output location: H:\Projects\froog\client\dist\shell
+
+Application bundle generation complete. [4.248 seconds]
+
+Γû▓ [WARNING] projects/shell/src/layout/map-sign/map-sign.component.scss exceeded maximum budget. Budget 2.00 kB was not met by 1.37 kB with a total of 3.37 kB.
+
+

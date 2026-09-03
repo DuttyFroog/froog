@@ -11,9 +11,9 @@ independent .NET services.
 flowchart LR
   B[Browser]
   B -->|:4200| SH[shell - host]
-  SH -.->|remoteEntry.js :4201| P[portfolio]
-  SH -.->|remoteEntry.js :4202| S[sandbox]
-  SH -.->|remoteEntry.js :4203| F[share-files]
+  SH -.->|remoteEntry.json :4201| P[portfolio]
+  SH -.->|remoteEntry.json :4202| S[sandbox]
+  SH -.->|remoteEntry.json :4203| F[share-files]
   B -->|/auth /sandbox| G[Froog.Gateway :5000]
   G -->|:5103| A[Froog.AuthService]
   G -->|:5041| SB[Froog.SandboxService]
@@ -30,7 +30,7 @@ gateway is that entry point for the APIs.
 | `Froog.Gateway` | 5000 | 7120 | Reverse proxy, single API origin |
 | `Froog.AuthService` | 5103 | 7155 | Auth API (placeholder) |
 | `Froog.SandboxService` | 5041 | 7223 | Sandbox API (placeholder) |
-| `shell` | 4200 | — | Module Federation **host** |
+| `shell` | 4200 | — | Native Federation **dynamic host** |
 | `portfolio` | 4201 | — | Remote |
 | `sandbox` | 4202 | — | Remote |
 | `share-files` | 4203 | — | Remote |
@@ -137,24 +137,36 @@ first, the gateway last.**
 
 ## 3. Frontend
 
-### 3.1 What Module Federation is doing
+### 3.1 What Native Federation is doing
 
 Instead of one Angular application, there are four, **built and deployed separately but
 assembled in the browser at runtime**.
 
-`shell` is the **host** — the only app a user navigates to. Its `webpack.config.js` lists
-`remotes`, the URLs of apps it can pull code from.
+`shell` is the **dynamic host** — the only app a user navigates to. It does not hardcode
+remote URLs; it reads them from `projects/shell/src/assets/federation.manifest.json`:
 
-The other three are **remotes**. Each declares:
+```json
+{
+  "portfolio": "http://localhost:4201/remoteEntry.json",
+  "sandbox": "http://localhost:4202/remoteEntry.json",
+  "shareFiles": "http://localhost:4203/remoteEntry.json"
+}
+```
+
+The other three are **remotes**. Each declares in its `federation.config.js`:
 
 ```js
 name: 'portfolio',
 exposes: { './Routes': './projects/portfolio/src/app/app.routes.ts' }
 ```
 
-That `exposes` block is what makes webpack emit **`remoteEntry.js`** — a small manifest
+That `exposes` block is what makes the build emit **`remoteEntry.json`** — a manifest
 describing what the app publishes and which shared libraries it carries. Without
-`exposes`, no `remoteEntry.js` is produced at all and every remote fetch 404s.
+`exposes`, no entry file is produced at all and every remote fetch 404s.
+
+Unlike Module Federation, none of this is webpack-specific. Native Federation builds with
+esbuild and wires everything together with a standard **import map**, shimmed by
+`es-module-shims` for browsers that do not support them natively.
 
 ### 3.2 How one route loads
 
@@ -164,26 +176,25 @@ In `projects/shell/src/app/app.routes.ts`:
 {
   path: '',
   loadChildren: () =>
-    loadRemoteModule({
-      type: 'module',
-      remoteEntry: 'http://localhost:4201/remoteEntry.js',
-      exposedModule: './Routes'
-    }).then(m => m.routes)
+    loadRemoteModule('portfolio', './Routes').then(m => m.routes)
 }
 ```
 
-On navigation the browser fetches `remoteEntry.js` from the *portfolio* dev server,
-negotiates shared dependencies, dynamically imports the exposed `./Routes`, and hands the
-resulting `Routes` array to the Angular router as child routes. None of that code is in
-the shell's bundle.
+`'portfolio'` is the key from the manifest, not a URL. On navigation the browser resolves
+it through the import map, fetches the exposed `./Routes` chunk from the *portfolio* dev
+server, and hands the resulting `Routes` array to the Angular router as child routes. None
+of that code is in the shell's bundle.
 
 Current route table:
 
-| Path | Remote | Port |
+| Path | Remote name | Port |
 | --- | --- | --- |
-| `''` | portfolio | 4201 |
-| `sandbox` | sandbox | 4202 |
-| `files` | shareFiles | 4203 |
+| `sandbox` | `sandbox` | 4202 |
+| `files` | `shareFiles` | 4203 |
+| `''` | `portfolio` | 4201 |
+
+`''` is matched last on purpose — with prefix matching it would otherwise swallow every
+other path.
 
 ### 3.3 The supporting machinery
 
@@ -198,17 +209,22 @@ shared: { ...shareAll({ singleton: true, strictVersion: true, requiredVersion: '
 `singleton` enforces one shared instance; `strictVersion` throws loudly on a version
 mismatch instead of misbehaving silently.
 
-**`bootstrap.ts` and the dynamic import.** Every app's `main.ts` is just
-`import('./bootstrap')`. That indirection is mandatory — shared-scope negotiation must
-finish *before* any Angular code executes. A static import would evaluate Angular
-immediately and lose the race.
+**`shareAll` reads `dependencies`, so build-only tooling must not live there.** Tailwind
+and PostCSS are Node packages; sharing them makes the build fail with `Could not resolve
+"fs"`. They belong in `devDependencies` (or in the config's `skip` list).
 
-**`ngx-build-plus`** is the glue that lets Angular's builder accept an
-`extraWebpackConfig`. The stock CLI does not expose webpack config, which is why
-`angular.json` uses `ngx-build-plus:browser` instead of the default builder.
+**`initFederation` and `bootstrap.ts`.** Every app's `main.ts` calls `initFederation()`
+and only then dynamically imports `./bootstrap`. That indirection is mandatory — the
+import map must be installed *before* any Angular code executes. A static import would
+evaluate Angular immediately and lose the race. The host passes the manifest path;
+remotes call it with no arguments.
 
-**`commonChunk: false`** stops webpack from splitting shared code into a common chunk,
-which would conflict with federation's own sharing mechanism.
+**The builder chain.** `angular.json` gives every project four targets:
+`build` and `serve` run `@angular-architects/native-federation:build`, which wraps the
+real `esbuild` (`@angular-devkit/build-angular:application`) and `serve-original`
+(`dev-server`) targets. Output lands in `dist/<project>/browser`.
+
+`es-module-shims` is listed alongside `zone.js` in each project's `polyfills` array.
 
 ### 3.4 Version constraints (important)
 
@@ -216,9 +232,9 @@ The following must move together — they are locked to the same major:
 
 | Package | Version | Constraint |
 | --- | --- | --- |
-| `@angular/*` | 17.3 | baseline |
-| `@angular-architects/module-federation` | 17.0.8 | must match Angular major |
-| `ngx-build-plus` | 17.0.0 | needs `@angular-devkit/build-angular` of the same major |
+| `@angular/*` | 17.3 | baseline; 17.1+ required by Native Federation 17.1 |
+| `@angular-architects/native-federation` | 17.1.8 | must match Angular major |
+| `es-module-shims` | 1.5+ | import-map polyfill, injected as a polyfill entry |
 | `tailwindcss` | 3.4 | Angular 17's builder only accepts Tailwind 2 or 3 |
 
 Tailwind 4 requires Angular 20+ (it needs PostCSS config file support, added in v20).
@@ -264,8 +280,9 @@ show both `Hello, shell` and `Hello, portfolio`.
 
 ## 5. Request flow, end to end
 
-1. Browser loads `localhost:4200` → shell `main.ts` → `bootstrap.ts` → Angular starts.
-2. Router hits `''` → `loadRemoteModule` fetches `localhost:4201/remoteEntry.js`.
+1. Browser loads `localhost:4200` → shell `main.ts` → `initFederation('/assets/federation.manifest.json')` installs the import map → `bootstrap.ts` → Angular starts.
+2. Router hits `''` → `loadRemoteModule('portfolio', './Routes')` resolves through the import
+   map and fetches portfolio's exposed chunk.
 3. Shared scope resolves; portfolio's routes and components render inside the shell's
    `<router-outlet>`.
 4. A component calls `localhost:5000/auth/whatever`.
@@ -283,10 +300,12 @@ show both `Hello, shell` and `Hello, portfolio`.
 | Gateway returns 404 from a service | Missing `PathRemovePrefix` transform | Add the transform to the route |
 | `Failed to bind to address ... already in use` | Two projects share an `applicationUrl` | Give each a unique port |
 | CORS error in browser console | Request bypasses the gateway, or `UseCors` is registered after `MapReverseProxy` | Call through 5000; keep `UseCors` first |
-| Remote route fails, `remoteEntry.js` 404 | Remote has no `exposes` block, so no entry file is emitted | Add `name` + `exposes` to its webpack config |
-| `ERESOLVE` on `npm install` | Angular / MF / ngx-build-plus / Tailwind majors disagree | Align all four to the same major |
+| Remote route fails, `remoteEntry.json` 404 | Remote has no `exposes` block, so no entry file is emitted | Add `name` + `exposes` to its `federation.config.js` |
+| Build fails with `Could not resolve "fs"` while preparing shared packages | A Node-only package (Tailwind, PostCSS) sits in `dependencies`, so `shareAll` tries to bundle it for the browser | Move it to `devDependencies`, or add it to `skip` in `federation.config.js` |
+| `EBUSY ... node_modules/.cache/native-federation/*.js` on first `run:all` | All four dev servers race to populate the shared cache on a cold start | Re-run `npm run run:all`; the cache is written once and reused |
+| `ERESOLVE` on `npm install` | Angular / Native Federation / Tailwind majors disagree | Align them to the same major |
 | `strictVersion` runtime error | Two apps loaded different versions of a shared library | Keep dependency versions identical across projects |
-| `ERR_REQUIRE_ESM` from `mf-dev-server.js` | The v17 dev server requires CommonJS chalk; chalk 5 is ESM | Use the `concurrently`-based `run:all` script |
+| `ERR_REQUIRE_ESM` from `mf-dev-server.js` | The v17 dev server requires CommonJS chalk; chalk 5 is ESM | Not applicable since the move to Native Federation |
 | `NG0912: Component ID generation collision` | Every app scaffolds `AppComponent` with selector `app-root` | Harmless; resolves once remotes expose real feature components |
 | `'concurrently' is not recognized` | npm ran outside `client/`, so local `.bin` is not on PATH | `cd client` first — `--prefix` does not change the working directory |
 
@@ -296,9 +315,8 @@ show both `Hello, shell` and `Hello, portfolio`.
 
 - Auth and Sandbox services are placeholders returning `"Hello World!"`.
 - Remote apps route to their scaffolded `AppComponent`; replace with real features.
-- Remote URLs are hardcoded to `localhost` in `app.routes.ts`. For multiple environments,
-  switch to a Module Federation **manifest** (`mf.manifest.json` + `initFederation`) so
-  URLs are configuration rather than code.
+- `federation.manifest.json` still points at `localhost`. Swap the file per environment (or
+  serve it from the gateway) to point the shell at deployed remotes.
 - No authentication is enforced at the gateway yet — that is the natural place for JWT
   validation.
 - `npm audit` reports vulnerabilities inherent to the Angular 17 toolchain; clearing them

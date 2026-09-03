@@ -1,0 +1,24 @@
+ INFO  Building federation artefacts
+ INFO  Preparing shared npm packages
+ NOTE  This only needs to be done once, as results are cached
+ NOTE  Skip packages you don't want to share in your federation config
+- Building...
+
+Initial chunk files   | Names         |  Raw size | Estimated transfer size
+polyfills-YJELPHIQ.js | polyfills     |  70.27 kB |                22.69 kB
+styles-PRI6DWWH.css   | styles        |   5.48 kB |                 1.39 kB
+main-LJ6GGBIQ.js      | main          |   2.21 kB |               906 bytes
+chunk-POLL2CVR.js     | -             | 661 bytes |               661 bytes
+
+                      | Initial total |  78.60 kB |                25.62 kB
+
+Lazy chunk files      | Names         |  Raw size | Estimated transfer size
+chunk-Y6RYCY2P.js     | bootstrap     |   6.10 kB |                 1.41 kB
+
+Output location: H:\Projects\froog\client\dist\portfolio
+
+Application bundle generation complete. [4.811 seconds]
+
+Γû▓ [WARNING] projects/portfolio/src/layout/navigation-bar/navigation-bar.component.scss exceeded maximum budget. Budget 2.00 kB was not met by 100 bytes with a total of 2.10 kB.
+
+

@@ -10,7 +10,7 @@
   },
   "private": true,
   "dependencies": {
-    "@angular-architects/module-federation": "^17.0.8",
+    "@angular-architects/native-federation": "^17.1.8",
     "@angular/animations": "^17.3.0",
     "@angular/common": "^17.3.0",
     "@angular/compiler": "^17.3.0",
@@ -19,9 +19,8 @@
     "@angular/platform-browser": "^17.3.0",
     "@angular/platform-browser-dynamic": "^17.3.0",
     "@angular/router": "^17.3.0",
-    "postcss": "^8.4.35",
+    "es-module-shims": "^1.5.12",
     "rxjs": "~7.8.0",
-    "tailwindcss": "^3.4.0",
     "tslib": "^2.3.0",
     "zone.js": "~0.14.3"
   },
@@ -30,7 +29,8 @@
     "@angular/cli": "^17.3.9",
     "@angular/compiler-cli": "^17.3.0",
     "concurrently": "^9.2.4",
-    "ngx-build-plus": "^17.0.0",
+    "postcss": "^8.4.35",
+    "tailwindcss": "^3.4.0",
     "typescript": "~5.4.2"
   }
 }

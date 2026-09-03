@@ -1,0 +1,47 @@
+<div class="map-sign">
+    <div class="sign sign-base" aria-hidden="true"></div>
+
+    <ul class="sign-menu" [class.active]="isOpen" aria-hidden="true">
+        <li class="sign-menu-item" >
+            @if (!isLogin) {
+            <span class="icon material-symbols-outlined" (click)="login()">
+                question_mark
+            </span>
+            }
+            @else {
+            <span class="icon material-symbols-outlined">
+                favorite
+            </span>
+            <span class="icon login-badge material-symbols-outlined" aria-hidden="true" (click)="logout()">
+                cancel
+            </span>
+            }
+        </li>
+        @if (isLogin) {
+        <li class="sign-menu-item" (click)="navigateTo('/')">
+            <span class="icon material-symbols-outlined">
+                face
+            </span>
+            @if (currentUrl === '/') {
+            <span class="icon current-page-badge material-symbols-outlined" aria-hidden="true">
+                expand_circle_down
+            </span>
+            }
+        </li>
+        <li class="sign-menu-item" (click)="navigateTo('/sandbox')">
+            <span class="icon material-symbols-outlined">
+                box_edit
+            </span>
+            @if (currentUrl === '/sandbox') {
+            <span class="icon current-page-badge material-symbols-outlined" aria-hidden="true">
+                expand_circle_down
+            </span>
+            }
+        </li>
+        }
+    </ul>
+
+    <button class="sign sign-cover" type="button" [class.active]="isOpen" [attr.aria-expanded]="isOpen"
+        aria-label="Toggle map sign" (click)="toggle()">
+    </button>
+</div>

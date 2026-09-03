@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
-import { MapSignComponent } from '../components/map-sign/map-sign.component';
+import { MapSignComponent } from '../layout/map-sign/map-sign.component';
 
 @Component({
   selector: 'app-root',

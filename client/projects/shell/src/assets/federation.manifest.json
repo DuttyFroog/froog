@@ -1,0 +1,5 @@
+{
+	"portfolio": "http://localhost:4201/remoteEntry.json",
+	"sandbox": "http://localhost:4202/remoteEntry.json",
+	"shareFiles": "http://localhost:4203/remoteEntry.json"
+}
